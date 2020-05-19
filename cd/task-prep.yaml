@@ -1,0 +1,36 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: prep
+  namespace: 'cicd' # {"type":"string","x-kustomize":{"setter":{"name":"namespace","value":"cicd"}}}
+spec:
+  workspaces:
+  - name: global_access
+    mountPath: /tekton/home/.appctl
+  params:
+  - name: appName
+    type: string
+    default: sampleApp
+  - name: releaseEnv
+    type: string
+    default: dev
+  steps:
+  - name: prepare
+    image: gcr.io/appctl-e2e/appctl:v0.1.8-tekton
+    command:
+    # "run" can accept multiple commands, separated by "&&". This allows you to do a list of tasks in a single container(step).
+    - run
+    args:
+    # Note: Do not separate these two appctl commands in separate steps!
+    # Each step is run in its own container, the appctl-init prepares the git repositories and necessary config files for other commnands.
+    - appctl init $(inputs.params.appName) --app-config-repo=https://github.com/yuwenma/app-cicd-demo
+      && appctl prepare $(inputs.params.releaseEnv) --app-dir /workspace/$(inputs.params.appName) # {"type":"string","x-kustomize":{"partialSetters":[{"name":"config-repo","value":"https://github.com/yuwenma/app-cicd-demo"}]}}
+    env:
+    - name: "GIT_SSH_COMMAND" # Guarantee the git-ssh is pointed to the path defined by tekton. 
+      value: "ssh -i /tekton/home/.ssh/id_ssh-key"
+    - name: "GIT_AUTHOR_NAME"
+      value: "APPCTL Robot"
+    - name: "EMAIL" # Required
+      value: "appctl-robot@google.com"
+    - name: "APPCTL_INTERACTIVE" # Disable the appctl prompt messages.
+      value: "false"

@@ -1,0 +1,18 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: post-deploy-test
+  namespace: 'cicd' # {"type":"string","x-kustomize":{"setter":{"name":"namespace","value":"cicd"}}}
+spec:
+  params:
+  - name: releaseEnv
+    type: string
+    default: dev
+  steps:
+  - name: ping-app
+    image: ubuntu
+    command:
+    - echo
+    args:
+    # DUMMY test. Expect clients to use their own integration test image.
+    - "integration test on $(inputs.params.releaseEnv) shall pass."

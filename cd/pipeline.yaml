@@ -1,0 +1,59 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: cd-pipeline # {"type":"string","x-kustomize":{"setter":{"name":"pipeline-name","value":"cd-pipeline"}}}
+  namespace: 'cicd' # {"type":"string","x-kustomize":{"setter":{"name":"namespace","value":"cicd"}}}
+spec:
+  workspaces:
+  - name: global_access_ws
+  tasks:
+  - name: stg-prep # {"type":"string","x-kustomize":{"partialSetters":[{"name":"env1","value":"stg"}]}}
+    workspaces:
+    - name: global_access
+      workspace: global_access_ws
+    params:
+    - name: appName
+      value: 'app-cicd-demo' # {"type":"string","x-kustomize":{"setter":{"name":"app-name","value":"app-cicd-demo"}}}
+    - name: releaseEnv
+      value: stg # {"type":"string","x-kustomize":{"setter":{"name":"env1","value":"stg"}}}
+    taskRef:
+      name: prep
+  - name: stg-apply # {"type":"string","x-kustomize":{"partialSetters":[{"name":"env1","value":"stg"}]}}
+    workspaces:
+    - name: global_access
+      workspace: global_access_ws
+    params:
+    - name: appName
+      value: 'app-cicd-demo' # {"type":"string","x-kustomize":{"setter":{"name":"app-name","value":"app-cicd-demo"}}}
+    - name: releaseEnv
+      value: stg # {"type":"string","x-kustomize":{"setter":{"name":"env1","value":"stg"}}}
+    taskRef:
+      name: apply
+    workspaces:
+    - name: global_access
+      workspace: global_access_ws
+    runAfter:
+    - stg-prep # {"type":"string","x-kustomize":{"partialSetters":[{"name":"env1","value":"stg"}]}}
+  - name: stg-post-deploy-test # {"type":"string","x-kustomize":{"partialSetters":[{"name":"env2","value":"prod"}]}}
+    params:
+    - name: releaseEnv
+      value: stg # {"type":"string","x-kustomize":{"setter":{"name":"env1","value":"stg"}}}
+    taskRef:
+      name: post-deploy-test
+    runAfter:
+    - stg-apply # {"type":"string","x-kustomize":{"partialSetters":[{"name":"env1","value":"stg"}]}}
+  - name: prod-prep # {"type":"string","x-kustomize":{"partialSetters":[{"name":"env2","value":"prod"}]}}
+    workspaces:
+    - name: global_access
+      workspace: global_access_ws
+    params:
+    - name: appName
+      value: 'app-cicd-demo' # {"type":"string","x-kustomize":{"setter":{"name":"app-name","value":"app-cicd-demo"}}}
+    - name: releaseEnv
+      value: prod # {"type":"string","x-kustomize":{"setter":{"name":"env2","value":"prod"}}}
+    - name: promoteResource
+      value: stg # {"type":"string","x-kustomize":{"setter":{"name":"env1","value":"stg"}}}
+    taskRef:
+      name: prep-promote
+    runAfter:
+    - stg-post-deploy-test # {"type":"string","x-kustomize":{"partialSetters":[{"name":"env1","value":"stg"}]}}

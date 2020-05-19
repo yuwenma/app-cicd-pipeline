@@ -1,0 +1,13 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: 'cd-run' # {"type":"string","x-kustomize":{"partialSetters":[{"name":"pipeline-run","value":"cd-run"}]}}
+  namespace: 'cicd' # {"type":"string","x-kustomize":{"setter":{"name":"namespace","value":"cicd"}}}
+spec:
+  pipelineRef:
+    name: cd-pipeline # {"type":"string","x-kustomize":{"setter":{"name":"pipeline-name","value":"cd-pipeline"}}}
+  serviceAccountName: 'cicd-ksa' # {"type":"string","x-kustomize":{"setter":{"name":"ksa","value":"cicd-ksa"}}}
+  workspaces:
+  - name: global_access_ws
+    secret:
+      secretName: global-appctlconfig # {"type":"string","x-kustomize":{"setter":{"name":"global-appctl-secret","value":"global-appctlconfig"}}}
