@@ -1,0 +1,18 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: 'ci-run' # {"type":"string","x-kustomize":{"setter":{"name":"pipeline-run","value":"ci-run"}}}
+  namespace: 'cicd' # {"type":"string","x-kustomize":{"setter":{"name":"namespace","value":"cicd"}}}
+spec:
+  resources:
+  - name: source-repo
+    resourceRef:
+      name: app-git-repo
+  - name: web-image
+    resourceRef:
+      name: guestbook-web-image
+  - name: app-image
+    resourceRef:
+      name: guestbook-app-image
+  pipelineRef:
+    name: demo-pipeline

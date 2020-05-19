@@ -1,0 +1,29 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: container-structure-test
+  namespace: "cicd" # {"type":"string","x-kustomize":{"setter":{"name":"namespace","value":"cicd"}}}
+spec:
+  params:
+  - name: pathToConfig
+    default: /workspace/workspace/config.json
+    description: The path to the dockerfile to build
+  - name: testImage
+    default: "gcr.io/yuwen-cicd-demo2/ci-redisslave" # {"type":"string","x-kustomize":{"setter":{"name":"gcr_img_1","value":"gcr.io/yuwen-cicd-demo2/ci-redisslave"}}}
+    description: The gcr image to test
+  resources:
+    inputs:
+    - name: workspace
+      type: git
+    - name: builtImage
+      type: image
+  steps:
+  - name: file-exist-test
+    image: gcr.io/gcp-runtimes/container-structure-test
+    command:
+    - /container-structure-test
+    args:
+    - test
+    - --image=$(params.testImage)
+    - --config=$(params.pathToConfig)
+    - --driver=tar

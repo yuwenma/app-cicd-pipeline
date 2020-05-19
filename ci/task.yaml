@@ -1,0 +1,40 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: build-and-push
+  namespace: "cicd" # {"type":"string","x-kustomize":{"setter":{"name":"namespace","value":"cicd"}}}
+spec:
+  params:
+  - name: pathToDockerFile
+    default: /workspace/workspace/php-redis/Dockerfile
+    description: The path to the dockerfile to build
+  - name: pathToContext
+    default: /workspace/workspace
+    description: The build context used by Kaniko (https://github.com/GoogleContainerTools/kaniko#kaniko-build-contexts)
+  resources:
+    inputs:
+    - name: workspace
+      type: git
+    outputs:
+    - name: builtImage
+      type: image
+  steps:
+  - name: build-and-push
+    image: gcr.io/kaniko-project/executor:v0.15.0
+    command:
+    - /kaniko/executor
+    args:
+    - --dockerfile=$(params.pathToDockerFile)
+    - --destination=$(resources.outputs.builtImage.url)
+    - --context=$(params.pathToContext)
+    # specifying DOCKER_CONFIG is required to allow kaniko to detect docker credential
+    env:
+    - name: GOOGLE_APPLICATION_CREDENTIALS
+      value: /secret/kaniko-secret.json
+    volumeMounts:
+    - name: kaniko-secret
+      mountPath: /secret
+  volumes:
+  - name: kaniko-secret
+    secret:
+      secretName: kaniko-secret # {"type":"string","x-kustomize":{"setter":{"name":"gsa-key-file","value":"kaniko-secret"}}}

@@ -1,0 +1,11 @@
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
+metadata:
+    name: ci
+upstream:
+    type: git
+    git:
+        commit: 401b8150f6437e7d029e4cc09757c55a45e23e88
+        repo: https://source.developers.google.com/p/anthos-cli-alpha/r/onboarding-blueprints
+        directory: /blueprint-ci/ci
+        ref: master

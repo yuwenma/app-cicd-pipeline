@@ -1,0 +1,10 @@
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: guestbook-web-image
+  namespace: "cicd" # {"type":"string","x-kustomize":{"setter":{"name":"namespace","value":"cicd"}}}
+spec:
+  type: image
+  params:
+  - name: url
+    value: "gcr.io/yuwen-cicd-demo2/ci-frontend" # {"type":"string","x-kustomize":{"setter":{"name":"gcr_img_2","value":"gcr.io/yuwen-cicd-demo2/ci-frontend"}}}

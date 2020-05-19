@@ -1,0 +1,60 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: demo-pipeline
+  namespace: 'cicd' # {"type":"string","x-kustomize":{"setter":{"name":"namespace","value":"cicd"}}}
+spec:
+  resources:
+  - name: source-repo
+    type: git
+  - name: web-image
+    type: image
+  - name: app-image
+    type: image
+  tasks:
+  - name: build-frontend
+    resources:
+      inputs:
+      - name: workspace
+        resource: source-repo
+      outputs:
+      - name: builtImage
+        resource: web-image
+    params:
+    - name: pathToDockerFile
+      value: Dockerfile
+    - name: pathToContext
+      value: /workspace/workspace/php-redis/
+    taskRef:
+      name: build-and-push
+  - name: build-app
+    resources:
+      inputs:
+      - name: workspace
+        resource: source-repo
+      outputs:
+      - name: builtImage
+        resource: app-image
+    params:
+    - name: pathToDockerFile
+      value: Dockerfile
+    - name: pathToContext
+      value: /workspace/workspace/redis-slave/
+    taskRef:
+      name: build-and-push
+    runAfter:
+    - build-frontend
+  - name: test-redis-image
+    resources:
+      inputs:
+      - name: workspace
+        resource: source-repo
+      - name: builtImage
+        resource: app-image
+    params:
+    - name: pathToConfig
+      value: /workspace/workspace/config.json
+    taskRef:
+      name: container-structure-test
+    runAfter:
+    - build-app
